@@ -469,7 +469,7 @@ function HorizontalShelf({ title, subtitle, games, setCurrentPage, openProjectPr
   );
 }
 
-function HomePage({ setCurrentPage, openProjectPreview }) {
+function HomePage({ setCurrentPage, setSelectedCategory, openProjectPreview }) {
   const featuredHero = featuredGames[0];
   const continueBrowsing = featuredGames.slice(0, 6);
   const recentlyUpdated = [featuredGames[4], featuredGames[0], featuredGames[2], featuredGames[5], featuredGames[1]];
@@ -518,7 +518,14 @@ function HomePage({ setCurrentPage, openProjectPreview }) {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {categories.map((item) => (
-                    <button key={item} onClick={() => setCurrentPage("explore")} className="rounded-full border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-700 transition hover:bg-white">
+                    <button
+                      key={item}
+                      onClick={() => {
+                        setSelectedCategory(item);
+                        setCurrentPage("explore");
+                      }}
+                      className="rounded-full border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-700 transition hover:bg-white"
+                    >
                       {item}
                     </button>
                   ))}
@@ -558,42 +565,40 @@ function HomePage({ setCurrentPage, openProjectPreview }) {
   );
 }
 
-function ExplorePage({ setCurrentPage, openProjectPreview }) {
-  const [selected, setSelected] = useState("Trending");
-
+function ExplorePage({ selectedCategory, setSelectedCategory, openProjectPreview }) {
   const filteredGames = useMemo(() => {
-    if (selected === "Demo Available") {
+    if (selectedCategory === "Demo Available") {
       return featuredGames.filter((g) => g.build.toLowerCase().includes("demo") || g.build.toLowerCase().includes("public"));
     }
-    if (selected === "Near Goal") {
+    if (selectedCategory === "Near Goal") {
       return featuredGames.filter((g) => g.progress >= 70);
     }
-    if (selected === "New Projects") {
+    if (selectedCategory === "New Projects") {
       return featuredGames.slice(1, 5);
     }
-    if (selected === "Recently Updated") {
+    if (selectedCategory === "Recently Updated") {
       return featuredGames.filter((g) =>
         ["Updated Mar 16", "New this week", "Recently updated"].includes(g.update)
       );
     }
-    if (selected === "Under $40k raised") {
+    if (selectedCategory === "Under $40k raised") {
       return featuredGames.filter((g) => {
         const raised = Number(g.amount.split(" of ")[0]?.replace("$", "").replace("k", "").replace(/,/g, ""));
         return Number.isFinite(raised) && raised < 40;
       });
     }
     return featuredGames;
-  }, [selected]);
+  }, [selectedCategory]);
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
       <div className="grid gap-8 lg:grid-cols-[280px,1fr]">
         <aside className="space-y-5">
           <div className="rounded-[24px] border border-zinc-200 bg-white p-5 shadow-sm">
-            <div className="text-sm font-semibold text-zinc-900">Browse filters</div>
+              <div className="text-sm font-semibold text-zinc-900">Browse filters</div>
             <div className="mt-4 space-y-2">
               {categories.map((item) => (
-                <button key={item} onClick={() => setSelected(item)} className={cn("flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm", selected === item ? "bg-zinc-900 text-white" : "bg-zinc-50 text-zinc-700")}>
+                <button key={item} onClick={() => setSelectedCategory(item)} className={cn("flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm", selectedCategory === item ? "bg-zinc-900 text-white" : "bg-zinc-50 text-zinc-700")}>
                   <span>{item}</span>
                   <ChevronRight className="h-4 w-4" />
                 </button>
@@ -982,6 +987,7 @@ function DevelopersPage({ selectedProject, setSelectedProject, setCurrentPage })
 export default function PlayFirstSitePagesPrototype() {
   const [currentPage, setCurrentPage] = useState("home");
   const [selectedProject, setSelectedProject] = useState(featuredGames[0]);
+  const [selectedCategory, setSelectedCategory] = useState("Trending");
 
   function openProjectPreview(project) {
     setSelectedProject(project);
@@ -991,9 +997,9 @@ export default function PlayFirstSitePagesPrototype() {
   let page = null;
 
   if (currentPage === "home") {
-    page = <HomePage setCurrentPage={setCurrentPage} openProjectPreview={openProjectPreview} />;
+    page = <HomePage setCurrentPage={setCurrentPage} setSelectedCategory={setSelectedCategory} openProjectPreview={openProjectPreview} />;
   } else if (currentPage === "explore") {
-    page = <ExplorePage setCurrentPage={setCurrentPage} openProjectPreview={openProjectPreview} />;
+    page = <ExplorePage selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} openProjectPreview={openProjectPreview} />;
   } else if (currentPage === "project-preview") {
     page = <ProjectPreviewPage project={selectedProject} setCurrentPage={setCurrentPage} />;
   } else if (currentPage === "how-it-works") {
