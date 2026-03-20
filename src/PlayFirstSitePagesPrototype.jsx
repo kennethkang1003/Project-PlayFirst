@@ -329,6 +329,7 @@ const initialUploadState = {
   kickstarter: "",
   otherLink: "https://youtube.com/@loworbit",
   trailerUrl: "https://youtu.be/signal-run-preview",
+  gameLink: "https://loworbit.example/playtest",
   draftStatus: "Last autosave 2 min ago",
   heroAsset: "signal-run-hero.png",
   cardAsset: "signal-run-card.png",
@@ -361,6 +362,16 @@ function pageForPath(pathname) {
   return "home";
 }
 
+function getPlayLink(project) {
+  return (
+    project?.gameLink ||
+    project?.steam ||
+    project?.website ||
+    project?.otherLink ||
+    (project?.id ? `https://playfirst.example/projects/${project.id}/play` : "https://playfirst.example/play")
+  );
+}
+
 function PlayFirstMark() {
   return (
     <div className="flex items-center gap-3">
@@ -376,7 +387,7 @@ function PlayFirstMark() {
 }
 
 function AppShell({ currentPage, setCurrentPage, children }) {
-  const darkExperience = ["login", "signup", "upload"].includes(currentPage);
+  const darkExperience = true;
 
   return (
     <div
@@ -716,8 +727,8 @@ function MiniMeta({ label, value }) {
 
 function GameCard({ game, onOpen }) {
   return (
-    <article className="overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="relative h-48 overflow-hidden bg-zinc-900">
+    <article className="overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.06] shadow-[0_20px_60px_rgba(2,6,23,0.18)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/[0.08]">
+      <div className="relative aspect-video overflow-hidden bg-zinc-900">
         <div className="absolute inset-0 bg-[linear-gradient(135deg,_rgba(17,24,39,0.12),_rgba(17,24,39,0.78)),radial-gradient(circle_at_20%_20%,_rgba(56,189,248,0.28),_transparent_26%),radial-gradient(circle_at_80%_24%,_rgba(249,115,22,0.32),_transparent_26%),linear-gradient(to_bottom_right,_#1f2937,_#020617)]" />
         <div className="absolute left-4 top-4 rounded-full bg-black/35 px-2.5 py-1 text-[11px] text-white backdrop-blur">{game.build}</div>
         <div className="absolute bottom-4 left-4 rounded-full bg-white/12 px-2.5 py-1 text-[11px] text-white backdrop-blur">{game.update}</div>
@@ -726,27 +737,27 @@ function GameCard({ game, onOpen }) {
       <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-lg font-semibold text-zinc-900">{game.title}</div>
-            <div className="mt-1 text-sm text-zinc-500">{game.genre} · {game.studio}</div>
+            <div className="text-lg font-semibold text-white">{game.title}</div>
+            <div className="mt-1 text-sm text-zinc-400">{game.genre} · {game.studio}</div>
           </div>
-          <div className="rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] text-zinc-600">{game.status}</div>
+          <div className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-zinc-300">{game.status}</div>
         </div>
-        <p className="mt-3 text-sm leading-6 text-zinc-600">{game.description}</p>
-        <div className="mt-4 h-2 rounded-full bg-zinc-200">
-          <div className="h-2 rounded-full bg-zinc-900" style={{ width: `${game.progress}%` }} />
+        <p className="mt-3 text-sm leading-6 text-zinc-400">{game.description}</p>
+        <div className="mt-4 h-2 rounded-full bg-white/10">
+          <div className="h-2 rounded-full bg-cyan-300" style={{ width: `${game.progress}%` }} />
         </div>
-        <div className="mt-2 text-sm font-medium text-zinc-700">{game.progress}% funded</div>
+        <div className="mt-2 text-sm font-medium text-zinc-200">{game.progress}% funded</div>
         <div className="mt-1 text-sm text-zinc-500">{game.amount}</div>
         <div className="mt-4 flex flex-wrap gap-2">
           {game.trustTags.map((badge) => (
-            <span key={badge} className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs text-zinc-600">
+            <span key={badge} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-zinc-300">
               {badge}
             </span>
           ))}
         </div>
         <button
           onClick={onOpen}
-          className="mt-5 inline-flex items-center gap-2 rounded-full border border-zinc-300 px-4 py-2 text-sm text-zinc-700 transition hover:bg-zinc-50"
+          className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-zinc-200 transition hover:bg-white/10"
         >
           View project
           <ArrowRight className="h-4 w-4" />
@@ -775,11 +786,11 @@ function HorizontalShelf({ title, subtitle, games, setCurrentPage, openProjectPr
             key={`${title}-${game.id}`}
             onClick={() => openProjectPreview(game)}
             className={cn(
-              "group shrink-0 overflow-hidden rounded-[28px] border border-zinc-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
+              "group shrink-0 overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.06] text-left shadow-[0_20px_60px_rgba(2,6,23,0.18)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/[0.08]",
               large ? "w-[340px]" : "w-[300px]"
             )}
           >
-            <div className={cn("relative overflow-hidden bg-zinc-900", large ? "h-52" : "h-44")}>
+            <div className="relative aspect-video overflow-hidden bg-zinc-900">
               <div className="absolute inset-0 bg-[linear-gradient(135deg,_rgba(24,24,27,0.18),_rgba(24,24,27,0.72)),radial-gradient(circle_at_18%_20%,_rgba(56,189,248,0.28),_transparent_24%),radial-gradient(circle_at_78%_30%,_rgba(249,115,22,0.30),_transparent_20%),linear-gradient(to_bottom_right,_#1f2937,_#020617)] transition duration-300 group-hover:scale-[1.04]" />
               <div className="absolute left-4 top-4 rounded-full bg-black/35 px-2.5 py-1 text-[11px] text-white backdrop-blur">{game.build}</div>
               <div className="absolute bottom-4 left-4 rounded-full bg-white/12 px-2.5 py-1 text-[11px] text-white backdrop-blur">{game.update}</div>
@@ -788,17 +799,17 @@ function HorizontalShelf({ title, subtitle, games, setCurrentPage, openProjectPr
             <div className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-lg font-semibold text-zinc-900">{game.title}</div>
-                  <div className="mt-1 text-sm text-zinc-500">{game.genre} · {game.studio}</div>
+                  <div className="text-lg font-semibold text-white">{game.title}</div>
+                  <div className="mt-1 text-sm text-zinc-400">{game.genre} · {game.studio}</div>
                 </div>
-                <div className="rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] text-zinc-600">{game.status}</div>
+                <div className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-zinc-300">{game.status}</div>
               </div>
-              <p className="mt-3 text-sm leading-6 text-zinc-600">{game.description}</p>
-              <div className="mt-4 h-2 rounded-full bg-zinc-200">
-                <div className="h-2 rounded-full bg-zinc-900" style={{ width: `${game.progress}%` }} />
+              <p className="mt-3 text-sm leading-6 text-zinc-400">{game.description}</p>
+              <div className="mt-4 h-2 rounded-full bg-white/10">
+                <div className="h-2 rounded-full bg-cyan-300" style={{ width: `${game.progress}%` }} />
               </div>
               <div className="mt-2 flex items-center justify-between gap-3 text-sm">
-                <span className="font-medium text-zinc-700">{game.progress}% funded</span>
+                <span className="font-medium text-zinc-200">{game.progress}% funded</span>
                 <span className="text-zinc-500">{game.amount}</span>
               </div>
             </div>
@@ -817,8 +828,8 @@ function HomePage({ setCurrentPage, setSelectedCategory, openProjectPreview }) {
   const rising = [featuredGames[1], featuredGames[3], featuredGames[4], featuredGames[5]];
 
   return (
-    <main className="bg-stone-50">
-      <section className="border-b border-zinc-200 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.14),_transparent_24%),radial-gradient(circle_at_80%_0%,_rgba(249,115,22,0.14),_transparent_28%),linear-gradient(to_bottom,_#ffffff,_#fafaf9)]">
+    <main>
+      <section className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.14),_transparent_24%),radial-gradient(circle_at_80%_0%,_rgba(249,115,22,0.14),_transparent_28%),linear-gradient(to_bottom,_rgba(5,8,22,0.88),_rgba(10,16,32,0.82))]">
         <div className="mx-auto max-w-7xl px-6 py-8 lg:py-10">
           <div className="grid gap-6 lg:grid-cols-[1.5fr,0.72fr]">
             <button
@@ -856,9 +867,9 @@ function HomePage({ setCurrentPage, setSelectedCategory, openProjectPreview }) {
             </button>
 
             <div className="grid gap-4">
-              <SurfaceCard className="p-5">
+              <SurfaceCard dark className="p-5">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold tracking-tight text-zinc-900">Quick filters</h2>
+                  <h2 className="text-lg font-semibold tracking-tight text-white">Quick filters</h2>
                   <button onClick={() => setCurrentPage("explore")} className="text-sm text-zinc-500">
                     See all
                   </button>
@@ -871,7 +882,7 @@ function HomePage({ setCurrentPage, setSelectedCategory, openProjectPreview }) {
                         setSelectedCategory(item);
                         setCurrentPage("explore");
                       }}
-                      className="rounded-full border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-700 transition hover:bg-white"
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-200 transition hover:bg-white/10"
                     >
                       {item}
                     </button>
@@ -879,9 +890,9 @@ function HomePage({ setCurrentPage, setSelectedCategory, openProjectPreview }) {
                 </div>
               </SurfaceCard>
 
-              <SurfaceCard className="p-5">
+              <SurfaceCard dark className="p-5">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold tracking-tight text-zinc-900">Player to creator</h2>
+                  <h2 className="text-lg font-semibold tracking-tight text-white">Player to creator</h2>
                   <button onClick={() => setCurrentPage("signup")} className="text-sm text-zinc-500">
                     Join
                   </button>
@@ -892,12 +903,12 @@ function HomePage({ setCurrentPage, setSelectedCategory, openProjectPreview }) {
                     ["2", "Build your profile", "Join as a player or studio and shape your public presence."],
                     ["3", "Publish early", "Upload a project page and preview how discovery sees it."],
                   ].map(([step, title, body]) => (
-                    <div key={step} className="rounded-2xl bg-zinc-50 p-4">
+                    <div key={step} className="rounded-2xl bg-white/5 p-4">
                       <div className="flex items-start gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-2xl bg-zinc-900 text-sm text-white">{step}</div>
                         <div>
-                          <div className="text-sm font-medium text-zinc-900">{title}</div>
-                          <p className="mt-1 text-sm leading-6 text-zinc-500">{body}</p>
+                          <div className="text-sm font-medium text-white">{title}</div>
+                          <p className="mt-1 text-sm leading-6 text-zinc-400">{body}</p>
                         </div>
                       </div>
                     </div>
@@ -946,8 +957,8 @@ function ExplorePage({ selectedCategory, setSelectedCategory, openProjectPreview
     <main className="mx-auto max-w-7xl px-6 py-10">
       <div className="grid gap-8 lg:grid-cols-[280px,1fr]">
         <aside className="space-y-5">
-          <SurfaceCard className="p-5">
-            <div className="text-sm font-semibold text-zinc-900">Browse filters</div>
+          <SurfaceCard dark className="p-5">
+            <div className="text-sm font-semibold text-white">Browse filters</div>
             <div className="mt-4 space-y-2">
               {categories.map((item) => (
                 <button
@@ -955,7 +966,7 @@ function ExplorePage({ selectedCategory, setSelectedCategory, openProjectPreview
                   onClick={() => setSelectedCategory(item)}
                   className={cn(
                     "flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm",
-                    selectedCategory === item ? "bg-zinc-900 text-white" : "bg-zinc-50 text-zinc-700"
+                    selectedCategory === item ? "bg-cyan-300 text-slate-950" : "bg-white/5 text-zinc-300"
                   )}
                 >
                   <span>{item}</span>
@@ -965,9 +976,9 @@ function ExplorePage({ selectedCategory, setSelectedCategory, openProjectPreview
             </div>
           </SurfaceCard>
 
-          <SurfaceCard className="p-5">
-            <div className="text-sm font-semibold text-zinc-900">Trust signals</div>
-            <div className="mt-4 space-y-3 text-sm text-zinc-600">
+          <SurfaceCard dark className="p-5">
+            <div className="text-sm font-semibold text-white">Trust signals</div>
+            <div className="mt-4 space-y-3 text-sm text-zinc-400">
               <p>Verified studios</p>
               <p>Playable demo availability</p>
               <p>Milestone cadence</p>
@@ -981,6 +992,7 @@ function ExplorePage({ selectedCategory, setSelectedCategory, openProjectPreview
             eyebrow="Explore"
             title="Discover projects with more context"
             body="Filter by demo availability, funding momentum, or recent developer activity."
+            dark
           />
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {filteredGames.map((game) => (
@@ -995,61 +1007,69 @@ function ExplorePage({ selectedCategory, setSelectedCategory, openProjectPreview
 
 function StatCard({ label, value }) {
   return (
-    <div className="rounded-2xl border border-zinc-200 p-4">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
       <div className="text-xs uppercase tracking-wide text-zinc-500">{label}</div>
-      <div className="mt-2 text-xl font-semibold text-zinc-900">{value}</div>
+      <div className="mt-2 text-xl font-semibold text-white">{value}</div>
     </div>
   );
 }
 
 function FeatureBox({ title, body }) {
   return (
-    <div className="rounded-[24px] border border-zinc-200 bg-zinc-50 p-5">
-      <h3 className="text-base font-semibold text-zinc-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-zinc-600">{body}</p>
+    <div className="rounded-[24px] border border-white/10 bg-white/5 p-5">
+      <h3 className="text-base font-semibold text-white">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-zinc-400">{body}</p>
     </div>
   );
 }
 
 function ProjectPreviewPage({ project, setCurrentPage }) {
   const activeProject = project || featuredGames[0];
+  const playLink = getPlayLink(activeProject);
 
   return (
     <main>
-      <section className="border-b border-zinc-200 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.10),_transparent_30%),radial-gradient(circle_at_80%_0%,_rgba(249,115,22,0.12),_transparent_24%),linear-gradient(to_bottom,_#ffffff,_#fafaf9)]">
+      <section className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.10),_transparent_30%),radial-gradient(circle_at_80%_0%,_rgba(249,115,22,0.12),_transparent_24%),linear-gradient(to_bottom,_rgba(5,8,22,0.88),_rgba(10,16,32,0.82))]">
         <div className="mx-auto max-w-7xl px-6 py-12">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
               <div className="text-sm font-medium text-zinc-500">Generated from live project fields</div>
-              <h1 className="mt-2 text-4xl font-semibold tracking-tight text-zinc-900 md:text-5xl">{activeProject.title}</h1>
+              <h1 className="mt-2 text-4xl font-semibold tracking-tight text-white md:text-5xl">{activeProject.title}</h1>
             </div>
-            <GhostButton onClick={() => setCurrentPage("upload")}>Back to upload</GhostButton>
+            <GhostButton dark onClick={() => setCurrentPage("upload")}>Back to upload</GhostButton>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-[1.1fr,0.9fr]">
             <div>
               <div className="mb-4 flex flex-wrap gap-2 text-xs text-zinc-600">
                 {[activeProject.status, ...activeProject.trustTags].map((chip) => (
-                  <span key={chip} className="rounded-full bg-white px-3 py-1 shadow-sm ring-1 ring-zinc-200">
+                  <span key={chip} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-zinc-300">
                     {chip}
                   </span>
                 ))}
               </div>
-              <p className="max-w-2xl text-base leading-7 text-zinc-600 md:text-lg">
+              <p className="max-w-2xl text-base leading-7 text-zinc-400 md:text-lg">
                 {activeProject.description} This view mirrors how your project page reads once it moves from discovery into a deeper showcase.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <PrimaryButton>Follow project</PrimaryButton>
-                <GhostButton>Watch trailer</GhostButton>
+                <a href={playLink} target="_blank" rel="noreferrer">
+                  <PrimaryButton dark>
+                    <MonitorPlay className="h-4 w-4" />
+                    Play Now
+                  </PrimaryButton>
+                </a>
+                <a href={activeProject.trailerUrl || activeProject.otherLink || "#"} target="_blank" rel="noreferrer">
+                  <GhostButton dark>Watch trailer</GhostButton>
+                </a>
               </div>
             </div>
 
-            <SurfaceCard className="p-5">
+            <SurfaceCard dark className="p-5">
               <div className="text-sm font-medium text-zinc-500">Funding progress</div>
-              <div className="mt-2 text-3xl font-semibold text-zinc-900">{activeProject.progress}% funded</div>
+              <div className="mt-2 text-3xl font-semibold text-white">{activeProject.progress}% funded</div>
               <div className="mt-1 text-sm text-zinc-500">{activeProject.amount}</div>
-              <div className="mt-4 h-3 rounded-full bg-zinc-200">
-                <div className="h-3 rounded-full bg-zinc-900" style={{ width: `${activeProject.progress}%` }} />
+              <div className="mt-4 h-3 rounded-full bg-white/10">
+                <div className="h-3 rounded-full bg-cyan-300" style={{ width: `${activeProject.progress}%` }} />
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <StatCard label="Followers" value={activeProject.followers} />
@@ -1060,16 +1080,37 @@ function ProjectPreviewPage({ project, setCurrentPage }) {
             </SurfaceCard>
           </div>
 
-          <div className="mt-8 overflow-hidden rounded-[28px] border border-zinc-200 bg-zinc-900 shadow-sm">
-            <div className="relative h-[360px] bg-[linear-gradient(140deg,_rgba(15,23,42,0.72),_rgba(15,23,42,0.20)),radial-gradient(circle_at_20%_20%,_rgba(56,189,248,0.36),_transparent_26%),radial-gradient(circle_at_78%_30%,_rgba(249,115,22,0.35),_transparent_22%),linear-gradient(to_bottom_right,_#1f2937,_#020617)]">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <button className="flex h-16 w-16 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur">
-                  <Film className="ml-1 h-7 w-7" />
-                </button>
+          <div className="mt-8 overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.06] shadow-[0_20px_60px_rgba(2,6,23,0.18)] backdrop-blur-xl">
+            <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_260px]">
+              <div className="relative aspect-video bg-[linear-gradient(140deg,_rgba(15,23,42,0.72),_rgba(15,23,42,0.20)),radial-gradient(circle_at_20%_20%,_rgba(56,189,248,0.36),_transparent_26%),radial-gradient(circle_at_78%_30%,_rgba(249,115,22,0.35),_transparent_22%),linear-gradient(to_bottom_right,_#1f2937,_#020617)]">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <a href={activeProject.trailerUrl || activeProject.otherLink || "#"} target="_blank" rel="noreferrer" className="flex h-16 w-16 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur">
+                    <Film className="ml-1 h-7 w-7" />
+                  </a>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between bg-black/20 p-5 text-sm text-white/80 backdrop-blur">
+                  <span>Hero media generated from uploaded trailer / cover assets</span>
+                  <span>{activeProject.build}</span>
+                </div>
               </div>
-              <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between bg-black/20 p-5 text-sm text-white/80 backdrop-blur">
-                <span>Hero media generated from uploaded trailer / cover assets</span>
-                <span>{activeProject.build}</span>
+              <div className="flex flex-col justify-between gap-4 border-t border-white/10 p-5 lg:border-l lg:border-t-0">
+                <div>
+                  <div className="text-sm font-semibold text-white">Playable link</div>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">
+                    Every project page should let players move from watching to trying the game without hunting for the link.
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <a href={playLink} target="_blank" rel="noreferrer" className="block">
+                    <PrimaryButton dark className="w-full justify-center">
+                      <MonitorPlay className="h-4 w-4" />
+                      Launch Game
+                    </PrimaryButton>
+                  </a>
+                  <a href={activeProject.trailerUrl || activeProject.otherLink || "#"} target="_blank" rel="noreferrer" className="block">
+                    <GhostButton dark className="w-full">Watch promo</GhostButton>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -1079,8 +1120,8 @@ function ProjectPreviewPage({ project, setCurrentPage }) {
       <section className="mx-auto max-w-7xl px-6 py-10">
         <div className="grid gap-8 lg:grid-cols-[1.1fr,0.9fr]">
           <div className="space-y-8">
-            <SurfaceCard className="p-6">
-              <SectionHeader title="About the project" body="Generated from your upload basics, links, and summary blocks." />
+            <SurfaceCard dark className="p-6">
+              <SectionHeader dark title="About the project" body="Generated from your upload basics, links, and summary blocks." />
               <div className="grid gap-4 md:grid-cols-2">
                 <FeatureBox title="Playable build" body={`Pulled from the build label: ${activeProject.build}.`} />
                 <FeatureBox title="Roadmap visibility" body="Created from milestone inputs and visible creator update cadence." />
@@ -1089,16 +1130,16 @@ function ProjectPreviewPage({ project, setCurrentPage }) {
               </div>
             </SurfaceCard>
 
-            <SurfaceCard className="p-6">
-              <SectionHeader title="Milestones" body="These checklist items come directly from the project publishing flow." />
+            <SurfaceCard dark className="p-6">
+              <SectionHeader dark title="Milestones" body="These checklist items come directly from the project publishing flow." />
               <div className="space-y-4">
                 {activeProject.milestones.map(([label, done]) => (
-                  <div key={label} className="flex items-center justify-between rounded-2xl bg-zinc-50 px-4 py-3">
+                  <div key={label} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className={cn("flex h-8 w-8 items-center justify-center rounded-full", done ? "bg-zinc-900 text-white" : "bg-white text-zinc-400 ring-1 ring-zinc-200")}>
+                      <div className={cn("flex h-8 w-8 items-center justify-center rounded-full", done ? "bg-cyan-300 text-slate-950" : "bg-white/10 text-zinc-400 ring-1 ring-white/10")}>
                         <CheckCircle2 className="h-4 w-4" />
                       </div>
-                      <span className="font-medium text-zinc-800">{label}</span>
+                      <span className="font-medium text-zinc-200">{label}</span>
                     </div>
                     <span className="text-sm text-zinc-500">{done ? "Complete" : "In progress"}</span>
                   </div>
@@ -1108,8 +1149,8 @@ function ProjectPreviewPage({ project, setCurrentPage }) {
           </div>
 
           <div className="space-y-8">
-            <SurfaceCard className="p-6">
-              <SectionHeader title="Use of funds" body="Built from the creator publishing details, not hand-authored page copy." />
+            <SurfaceCard dark className="p-6">
+              <SectionHeader dark title="Use of funds" body="Built from the creator publishing details, not hand-authored page copy." />
               <div className="space-y-4">
                 {activeProject.funds.map(([label, pct]) => (
                   <div key={label}>
@@ -1117,23 +1158,23 @@ function ProjectPreviewPage({ project, setCurrentPage }) {
                       <span>{label}</span>
                       <span>{pct}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-zinc-200">
-                      <div className="h-2 rounded-full bg-zinc-900" style={{ width: pct }} />
+                    <div className="h-2 rounded-full bg-white/10">
+                      <div className="h-2 rounded-full bg-cyan-300" style={{ width: pct }} />
                     </div>
                   </div>
                 ))}
               </div>
             </SurfaceCard>
 
-            <SurfaceCard className="p-6">
-              <SectionHeader title="Studio trust section" body="Generated from studio history, updates, and external links." />
+            <SurfaceCard dark className="p-6">
+              <SectionHeader dark title="Studio trust section" body="Generated from studio history, updates, and external links." />
               <div className="space-y-3 text-sm text-zinc-600">
                 {activeProject.studioTrust.map((item) => (
-                  <div key={item} className="rounded-2xl bg-zinc-50 px-4 py-3">
+                  <div key={item} className="rounded-2xl bg-white/5 px-4 py-3 text-zinc-300">
                     {item}
                   </div>
                 ))}
-                <GhostButton onClick={() => setCurrentPage("upload")}>Edit upload inputs</GhostButton>
+                <GhostButton dark onClick={() => setCurrentPage("upload")}>Edit upload inputs</GhostButton>
               </div>
             </SurfaceCard>
           </div>
@@ -1157,7 +1198,7 @@ function HowItWorksPage({ setCurrentPage }) {
           </p>
         </div>
 
-        <SurfaceCard className="p-6">
+        <SurfaceCard dark className="p-6">
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               ["Games discovered monthly", "480k"],
@@ -1165,9 +1206,9 @@ function HowItWorksPage({ setCurrentPage }) {
               ["Avg. update frequency", "8.2 days"],
               ["Verified studios", "214"],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+              <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="text-sm text-zinc-500">{label}</div>
-                <div className="mt-2 text-2xl font-semibold text-zinc-900">{value}</div>
+                <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
               </div>
             ))}
           </div>
@@ -1181,18 +1222,18 @@ function HowItWorksPage({ setCurrentPage }) {
           ["3. Support", "Players back projects with a better understanding of what is already playable and what the next milestone unlocks."],
           ["4. Publish in public", "Studios upload milestones, screenshots, and creator-facing previews to maintain trust before and after launch."],
         ].map(([title, body], idx) => (
-          <SurfaceCard key={title} className="p-5">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-stone-100 text-zinc-700">0{idx + 1}</div>
-            <h3 className="text-lg font-semibold text-zinc-900">{title}</h3>
-            <p className="mt-2 text-sm leading-6 text-zinc-600">{body}</p>
+          <SurfaceCard dark key={title} className="p-5">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-zinc-200">0{idx + 1}</div>
+            <h3 className="text-lg font-semibold text-white">{title}</h3>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">{body}</p>
           </SurfaceCard>
         ))}
       </section>
 
-      <SurfaceCard className="mt-10 grid gap-6 p-8 lg:grid-cols-2">
+      <SurfaceCard dark className="mt-10 grid gap-6 p-8 lg:grid-cols-2">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">For players</h2>
-          <div className="mt-4 space-y-3 text-sm leading-6 text-zinc-600">
+          <h2 className="text-2xl font-semibold tracking-tight text-white">For players</h2>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-zinc-400">
             <p>Playable demo links reduce guesswork.</p>
             <p>Milestone tracking makes progress easier to understand.</p>
             <p>Funding plans help players see where support is intended to go.</p>
@@ -1200,14 +1241,14 @@ function HowItWorksPage({ setCurrentPage }) {
           </div>
         </div>
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">For developers</h2>
-          <div className="mt-4 space-y-3 text-sm leading-6 text-zinc-600">
+          <h2 className="text-2xl font-semibold tracking-tight text-white">For developers</h2>
+          <div className="mt-4 space-y-3 text-sm leading-6 text-zinc-400">
             <p>Pages are structured to communicate credibility without needing a giant community team.</p>
             <p>Milestones and updates help convert attention into trust.</p>
             <p>Demo-first discovery can improve the quality of supporters and feedback.</p>
             <p>Studio profiles turn one project into long-term audience equity.</p>
           </div>
-          <PrimaryButton className="mt-6" onClick={() => setCurrentPage("upload")}>
+          <PrimaryButton dark className="mt-6" onClick={() => setCurrentPage("upload")}>
             See upload flow
           </PrimaryButton>
         </div>
@@ -1683,6 +1724,11 @@ function UploadProjectPage({ setCurrentPage, setSelectedProject, previewProject 
               <FieldShell label="Trailer or demo video URL" helper="Shown at the top of the project page." dark>
                 <TextInput icon={Film} dark value={form.trailerUrl} onChange={(event) => updateField("trailerUrl", event.target.value)} placeholder="https://youtube.com/..." />
               </FieldShell>
+              <FieldShell label="Game / demo link" helper="This powers the Play Now button next to your promo media." dark>
+                <TextInput icon={MonitorPlay} dark value={form.gameLink} onChange={(event) => updateField("gameLink", event.target.value)} placeholder="https://itch.io/... or playable build link" />
+              </FieldShell>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2">
               <MediaDropZone
                 label="Optional GIF / hover preview"
                 helper="Used in richer discovery placements and hover modules."
@@ -1838,7 +1884,7 @@ function HomeCardPreview({ data }) {
     <div>
       <div className="mb-3 text-sm font-semibold text-white">Home Card</div>
       <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0d1626]">
-        <div className="relative h-44 overflow-hidden bg-zinc-900">
+        <div className="relative aspect-video overflow-hidden bg-zinc-900">
           <div className="absolute inset-0 bg-[linear-gradient(145deg,_rgba(15,23,42,0.1),_rgba(15,23,42,0.78)),radial-gradient(circle_at_20%_20%,_rgba(56,189,248,0.34),_transparent_26%),radial-gradient(circle_at_78%_28%,_rgba(249,115,22,0.32),_transparent_22%),linear-gradient(to_bottom_right,_#162032,_#050816)]" />
           <div className="absolute left-4 top-4 rounded-full bg-black/40 px-2.5 py-1 text-[11px] text-white">{data.build}</div>
           <div className="absolute bottom-4 right-4 rounded-full bg-white/10 px-2.5 py-1 text-[11px] text-white">{data.visibility}</div>
@@ -1870,7 +1916,7 @@ function ProjectPageMiniPreview({ data }) {
     <div className="space-y-4">
       <div className="text-sm font-semibold text-white">Project Page</div>
       <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0d1626]">
-        <div className="h-40 bg-[linear-gradient(145deg,_rgba(15,23,42,0.1),_rgba(15,23,42,0.78)),radial-gradient(circle_at_20%_20%,_rgba(56,189,248,0.34),_transparent_26%),radial-gradient(circle_at_78%_28%,_rgba(249,115,22,0.32),_transparent_22%),linear-gradient(to_bottom_right,_#162032,_#050816)]" />
+        <div className="aspect-video bg-[linear-gradient(145deg,_rgba(15,23,42,0.1),_rgba(15,23,42,0.78)),radial-gradient(circle_at_20%_20%,_rgba(56,189,248,0.34),_transparent_26%),radial-gradient(circle_at_78%_28%,_rgba(249,115,22,0.32),_transparent_22%),linear-gradient(to_bottom_right,_#162032,_#050816)]" />
         <div className="p-5">
           <div className="flex flex-wrap gap-2">
             {[data.status, ...data.tags.slice(0, 3)].map((tag) => (
@@ -1881,9 +1927,16 @@ function ProjectPageMiniPreview({ data }) {
           </div>
           <div className="mt-4 text-2xl font-semibold text-white">{data.title}</div>
           <p className="mt-2 text-sm leading-6 text-zinc-400">{data.description}</p>
-          <div className="mt-4 flex gap-3">
-            <PrimaryButton dark className="px-4 py-2">Follow</PrimaryButton>
-            <GhostButton dark>Watch trailer</GhostButton>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <a href={data.gameLink} target="_blank" rel="noreferrer">
+              <PrimaryButton dark className="px-4 py-2">
+                <MonitorPlay className="h-4 w-4" />
+                Play Now
+              </PrimaryButton>
+            </a>
+            <a href={data.trailerUrl || data.otherLink || "#"} target="_blank" rel="noreferrer">
+              <GhostButton dark>Watch trailer</GhostButton>
+            </a>
           </div>
           <div className="mt-5 grid grid-cols-3 gap-3">
             {data.gallery.slice(0, 3).map((item) => (
@@ -1964,6 +2017,10 @@ function buildPreviewProject(form) {
       form.discord ? "Discord community link added" : "Discord pending",
       form.trailerUrl ? "Trailer ready for hero placement" : "Trailer pending",
     ],
+    trailerUrl: form.trailerUrl,
+    gameLink: form.gameLink,
+    website: form.website,
+    otherLink: form.otherLink,
     hook: form.hook.trim() || "Your one-line hook appears here.",
     visibility: form.visibility,
     genreLine: form.genres.join(" / ") || "Genre pending",
@@ -1978,6 +2035,7 @@ function getUploadValidation(form) {
   if (!form.heroAsset) issues.push("Missing thumbnail: add a hero image for discovery feeds.");
   if (form.hook.trim().length > 90) issues.push("Hook is too long: keep it under 90 characters.");
   if (form.genres.length === 0) issues.push("No genre selected: choose at least one genre tag.");
+  if (!form.gameLink.trim()) issues.push("Missing game link: add a playable build or store/demo URL for the Play Now button.");
   return issues;
 }
 
