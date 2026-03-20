@@ -9,9 +9,85 @@
       content="PlayFirst prototype for discovering and supporting promising games early."
     />
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top, rgba(56, 189, 248, 0.08), transparent 24%),
+          radial-gradient(circle at 80% 0%, rgba(249, 115, 22, 0.1), transparent 22%),
+          linear-gradient(to bottom, #050816, #0a1020 44%, #0b1220);
+        color: #f4f4f5;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      #root {
+        min-height: 100vh;
+      }
+
+      .boot-shell {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .boot-card {
+        width: min(560px, 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(18px);
+        border-radius: 28px;
+        padding: 28px;
+        box-shadow: 0 20px 60px rgba(2, 6, 23, 0.18);
+      }
+
+      .boot-mark {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .boot-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 0 24px rgba(56, 189, 248, 0.18);
+      }
+
+      .boot-title {
+        margin: 0 0 8px;
+        font-size: 28px;
+        line-height: 1.2;
+      }
+
+      .boot-copy {
+        margin: 0;
+        color: rgba(228, 228, 231, 0.72);
+        line-height: 1.7;
+      }
+    </style>
   </head>
-  <body class="bg-stone-50">
-    <div id="root"></div>
+  <body>
+    <div id="root">
+      <div class="boot-shell">
+        <div class="boot-card">
+          <div class="boot-mark">
+            <div class="boot-badge"></div>
+            <div>
+              <div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:rgba(165,243,252,.72);">PlayFirst</div>
+              <div style="font-size:12px;color:rgba(161,161,170,.8);">discover early. publish in public.</div>
+            </div>
+          </div>
+          <h1 class="boot-title">Loading the latest PlayFirst build...</h1>
+          <p class="boot-copy">If this message stays on screen, refresh once and the app should continue into the updated discovery and upload experience.</p>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
