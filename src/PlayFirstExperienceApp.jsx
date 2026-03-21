@@ -418,7 +418,6 @@ function AppShell({ currentPage, setCurrentPage, children }) {
             <NavButton currentPage={currentPage} id="home" label="Home" setCurrentPage={setCurrentPage} dark={darkExperience} />
             <NavButton currentPage={currentPage} id="explore" label="Explore" setCurrentPage={setCurrentPage} dark={darkExperience} />
             <NavButton currentPage={currentPage} id="how-it-works" label="How It Works" setCurrentPage={setCurrentPage} dark={darkExperience} />
-            <NavButton currentPage={currentPage} id="upload" label="Upload" setCurrentPage={setCurrentPage} dark={darkExperience} />
           </nav>
 
           <div className="hidden flex-1 justify-center xl:flex">
