@@ -303,6 +303,16 @@ const stageOptions = ["Concept", "Prototype", "Vertical slice", "Demo live", "Ea
 const discoverabilityOptions = ["Atmospheric", "Cozy", "Tactical", "Multiplayer", "Choice-driven", "Hardcore"];
 const audienceOptions = ["Solo players", "Co-op groups", "Streamer-friendly", "Controller-first", "Lore hunters"];
 
+function createRoadmapPhase(name, timeframe, objective, milestones) {
+  return {
+    id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    name,
+    timeframe,
+    objective,
+    milestones,
+  };
+}
+
 const initialUploadState = {
   title: "Signal Run",
   hook: "A tactical stealth extraction game where every reroute leaves a visible trace.",
@@ -335,10 +345,103 @@ const initialUploadState = {
   cardAsset: "signal-run-card.png",
   galleryAssets: ["district-night-shot.png", "alarm-route-map.png", "co-op-breach-frame.png"],
   hoverPreview: "signal-run-hover.gif",
+  roadmapPhases: [
+    createRoadmapPhase("Vertical Slice Lock", "Apr 2026", "Finalize the stealth loop, extraction scoring, and readable alert states for repeatable demo sessions.", [
+      {
+        id: "phase-1-milestone-1",
+        title: "Core route sandbox",
+        status: "Complete",
+        budgetCategory: "Engineering",
+        budgetAmount: "12000",
+        description: "Lock patrol behavior, reroute interactions, and extraction scoring for the first district.",
+      },
+      {
+        id: "phase-1-milestone-2",
+        title: "Alarm readability pass",
+        status: "In progress",
+        budgetCategory: "UI / UX",
+        budgetAmount: "4200",
+        description: "Improve player feedback for camera sweeps, alarm escalation, and stealth fail states.",
+      },
+    ]),
+    createRoadmapPhase("Public Demo Push", "Jun 2026", "Package the first public-facing build, trailer refresh, and creator updates needed for a wider drop.", [
+      {
+        id: "phase-2-milestone-1",
+        title: "Trailer recut",
+        status: "Queued",
+        budgetCategory: "Marketing",
+        budgetAmount: "2800",
+        description: "Cut a faster 60-second trailer around extraction tension, route planning, and clean CTA framing.",
+      },
+      {
+        id: "phase-2-milestone-2",
+        title: "Steam page polish",
+        status: "Queued",
+        budgetCategory: "Production",
+        budgetAmount: "3600",
+        description: "Refresh store copy, GIFs, and deck-safe screenshots before the playable demo opens up.",
+      },
+    ]),
+  ],
 };
 
 function cn(...classes) {
   return classes.filter(Boolean).join(" ");
+}
+
+function buildRoadmapFromMilestones(milestones = []) {
+  if (!milestones.length) return [];
+  return [
+    {
+      id: "legacy-roadmap",
+      name: "Roadmap overview",
+      timeframe: "In progress",
+      objective: "Legacy milestone checklist imported into the updated roadmap layout.",
+      milestones: milestones.map(([label, done], index) => ({
+        id: `legacy-${index}`,
+        title: label,
+        status: done ? "Complete" : "In progress",
+        budgetCategory: "General",
+        budgetAmount: "",
+        description: done ? "Completed milestone." : "Current active milestone.",
+      })),
+    },
+  ];
+}
+
+function getRoadmapPhases(project) {
+  return project?.roadmapPhases?.length ? project.roadmapPhases : buildRoadmapFromMilestones(project?.milestones || []);
+}
+
+function getRoadmapSummary(project) {
+  const phases = getRoadmapPhases(project);
+  if (!phases.length) {
+    return {
+      phaseCount: 0,
+      milestoneCount: 0,
+      completedCount: 0,
+      nextLabel: "Roadmap pending",
+      timeframe: "Add roadmap",
+    };
+  }
+
+  const milestoneCount = phases.reduce((total, phase) => total + phase.milestones.length, 0);
+  const completedCount = phases.reduce(
+    (total, phase) => total + phase.milestones.filter((milestone) => milestone.status === "Complete").length,
+    0
+  );
+  const nextMilestone =
+    phases.flatMap((phase) => phase.milestones.map((milestone) => ({ ...milestone, phaseName: phase.name, timeframe: phase.timeframe }))).find(
+      (milestone) => milestone.status !== "Complete"
+    ) || null;
+
+  return {
+    phaseCount: phases.length,
+    milestoneCount,
+    completedCount,
+    nextLabel: nextMilestone ? `${nextMilestone.phaseName}: ${nextMilestone.title}` : "All listed milestones complete",
+    timeframe: nextMilestone?.timeframe || phases[phases.length - 1]?.timeframe || "Timeline live",
+  };
 }
 
 function routeForPage(page) {
@@ -725,6 +828,8 @@ function MiniMeta({ label, value }) {
 }
 
 function GameCard({ game, onOpen }) {
+  const roadmap = getRoadmapSummary(game);
+
   return (
     <article className="overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.06] shadow-[0_20px_60px_rgba(2,6,23,0.18)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/[0.08]">
       <div className="relative aspect-video overflow-hidden bg-zinc-900">
@@ -754,6 +859,16 @@ function GameCard({ game, onOpen }) {
             </span>
           ))}
         </div>
+        <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+          <div className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+            <span>Roadmap</span>
+            <span>{roadmap.timeframe}</span>
+          </div>
+          <div className="mt-2 text-sm font-medium text-zinc-100">{roadmap.nextLabel}</div>
+          <div className="mt-1 text-xs text-zinc-500">
+            {roadmap.completedCount}/{roadmap.milestoneCount} milestones completed
+          </div>
+        </div>
         <button
           onClick={onOpen}
           className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-zinc-200 transition hover:bg-white/10"
@@ -780,51 +895,63 @@ function HorizontalShelf({ title, subtitle, games, setCurrentPage, openProjectPr
       </div>
 
       <div className="flex gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {games.map((game) => (
-          <button
-            key={`${title}-${game.id}`}
-            onClick={() => openProjectPreview(game)}
-            className={cn(
-              "group shrink-0 overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.06] text-left shadow-[0_20px_60px_rgba(2,6,23,0.18)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/[0.08]",
-              large ? "w-[340px]" : "w-[300px]"
-            )}
-          >
-            <div className="relative aspect-video overflow-hidden bg-zinc-900">
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,_rgba(24,24,27,0.18),_rgba(24,24,27,0.72)),radial-gradient(circle_at_18%_20%,_rgba(56,189,248,0.28),_transparent_24%),radial-gradient(circle_at_78%_30%,_rgba(249,115,22,0.30),_transparent_20%),linear-gradient(to_bottom_right,_#1f2937,_#020617)] transition duration-300 group-hover:scale-[1.04]" />
-              <div className="absolute left-4 top-4 rounded-full bg-black/35 px-2.5 py-1 text-[11px] text-white backdrop-blur">{game.build}</div>
-              <div className="absolute bottom-4 left-4 rounded-full bg-white/12 px-2.5 py-1 text-[11px] text-white backdrop-blur">{game.update}</div>
-              <div className="absolute bottom-4 right-4 rounded-full bg-black/35 px-2.5 py-1 text-[11px] text-white backdrop-blur">{game.followers}</div>
-            </div>
-            <div className="p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-lg font-semibold text-white">{game.title}</div>
-                  <div className="mt-1 text-sm text-zinc-400">{game.genre} · {game.studio}</div>
+        {games.map((game) => {
+          const roadmap = getRoadmapSummary(game);
+
+          return (
+            <button
+              key={`${title}-${game.id}`}
+              onClick={() => openProjectPreview(game)}
+              className={cn(
+                "group shrink-0 overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.06] text-left shadow-[0_20px_60px_rgba(2,6,23,0.18)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/[0.08]",
+                large ? "w-[340px]" : "w-[300px]"
+              )}
+            >
+              <div className="relative aspect-video overflow-hidden bg-zinc-900">
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,_rgba(24,24,27,0.18),_rgba(24,24,27,0.72)),radial-gradient(circle_at_18%_20%,_rgba(56,189,248,0.28),_transparent_24%),radial-gradient(circle_at_78%_30%,_rgba(249,115,22,0.30),_transparent_20%),linear-gradient(to_bottom_right,_#1f2937,_#020617)] transition duration-300 group-hover:scale-[1.04]" />
+                <div className="absolute left-4 top-4 rounded-full bg-black/35 px-2.5 py-1 text-[11px] text-white backdrop-blur">{game.build}</div>
+                <div className="absolute bottom-4 left-4 rounded-full bg-white/12 px-2.5 py-1 text-[11px] text-white backdrop-blur">{game.update}</div>
+                <div className="absolute bottom-4 right-4 rounded-full bg-black/35 px-2.5 py-1 text-[11px] text-white backdrop-blur">{game.followers}</div>
+              </div>
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-lg font-semibold text-white">{game.title}</div>
+                    <div className="mt-1 text-sm text-zinc-400">{game.genre} · {game.studio}</div>
+                  </div>
+                  <div className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-zinc-300">{game.status}</div>
                 </div>
-                <div className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-zinc-300">{game.status}</div>
+                <p className="mt-3 text-sm leading-6 text-zinc-400">{game.description}</p>
+                <div className="mt-4 h-2 rounded-full bg-white/10">
+                  <div className="h-2 rounded-full bg-cyan-300" style={{ width: `${game.progress}%` }} />
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-3 text-sm">
+                  <span className="font-medium text-zinc-200">{game.progress}% funded</span>
+                  <span className="text-zinc-500">{game.amount}</span>
+                </div>
+                <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                  <div className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+                    <span>Next roadmap</span>
+                    <span>{roadmap.timeframe}</span>
+                  </div>
+                  <div className="mt-2 text-sm font-medium text-zinc-100">{roadmap.nextLabel}</div>
+                </div>
               </div>
-              <p className="mt-3 text-sm leading-6 text-zinc-400">{game.description}</p>
-              <div className="mt-4 h-2 rounded-full bg-white/10">
-                <div className="h-2 rounded-full bg-cyan-300" style={{ width: `${game.progress}%` }} />
-              </div>
-              <div className="mt-2 flex items-center justify-between gap-3 text-sm">
-                <span className="font-medium text-zinc-200">{game.progress}% funded</span>
-                <span className="text-zinc-500">{game.amount}</span>
-              </div>
-            </div>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
     </section>
   );
 }
 
-function HomePage({ setCurrentPage, setSelectedCategory, openProjectPreview }) {
-  const featuredHero = featuredGames[0];
-  const continueBrowsing = featuredGames.slice(0, 6);
-  const recentlyUpdated = [featuredGames[4], featuredGames[0], featuredGames[2], featuredGames[5], featuredGames[1]];
-  const recommended = [featuredGames[2], featuredGames[5], featuredGames[3], featuredGames[0], featuredGames[4]];
-  const rising = [featuredGames[1], featuredGames[3], featuredGames[4], featuredGames[5]];
+function HomePage({ games, setCurrentPage, setSelectedCategory, openProjectPreview }) {
+  const featuredHero = games[0];
+  const continueBrowsing = games.slice(0, 6);
+  const recentlyUpdated = games.filter((game) => ["Updated Mar 16", "New this week", "Recently updated", "Updated moments ago", "Just published"].includes(game.update)).slice(0, 5);
+  const recommended = [...games].sort((a, b) => b.progress - a.progress).slice(0, 5);
+  const rising = [...games].sort((a, b) => a.progress - b.progress).slice(0, 4);
+  const heroRoadmap = getRoadmapSummary(featuredHero);
 
   return (
     <main>
@@ -851,6 +978,16 @@ function HomePage({ setCurrentPage, setSelectedCategory, openProjectPreview }) {
                   </div>
                   <h1 className="text-4xl font-semibold tracking-tight text-white md:text-6xl">{featuredHero.title}</h1>
                   <p className="mt-4 max-w-xl text-sm leading-7 text-white/78 md:text-base">{featuredHero.description}</p>
+                  <div className="mt-5 max-w-xl rounded-[24px] border border-white/10 bg-black/20 p-4 backdrop-blur">
+                    <div className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.18em] text-white/55">
+                      <span>Roadmap live</span>
+                      <span>{heroRoadmap.timeframe}</span>
+                    </div>
+                    <div className="mt-2 text-sm font-medium text-white">{heroRoadmap.nextLabel}</div>
+                    <div className="mt-1 text-sm text-white/70">
+                      {heroRoadmap.completedCount}/{heroRoadmap.milestoneCount} milestones complete across {heroRoadmap.phaseCount} phases
+                    </div>
+                  </div>
                   <div className="mt-6 flex flex-wrap gap-3">
                     <span className="rounded-full bg-white px-5 py-3 text-sm font-medium text-zinc-900">View Project</span>
                     <span className="rounded-full bg-white/12 px-5 py-3 text-sm font-medium text-white backdrop-blur">Watch Trailer</span>
@@ -929,28 +1066,28 @@ function HomePage({ setCurrentPage, setSelectedCategory, openProjectPreview }) {
   );
 }
 
-function ExplorePage({ selectedCategory, setSelectedCategory, openProjectPreview }) {
+function ExplorePage({ games, selectedCategory, setSelectedCategory, openProjectPreview }) {
   const filteredGames = useMemo(() => {
     if (selectedCategory === "Demo Available") {
-      return featuredGames.filter((g) => g.build.toLowerCase().includes("demo") || g.build.toLowerCase().includes("public"));
+      return games.filter((g) => g.build.toLowerCase().includes("demo") || g.build.toLowerCase().includes("public"));
     }
     if (selectedCategory === "Near Goal") {
-      return featuredGames.filter((g) => g.progress >= 70);
+      return games.filter((g) => g.progress >= 70);
     }
     if (selectedCategory === "New Projects") {
-      return featuredGames.slice(1, 5);
+      return games.slice(0, 5);
     }
     if (selectedCategory === "Recently Updated") {
-      return featuredGames.filter((g) => ["Updated Mar 16", "New this week", "Recently updated"].includes(g.update));
+      return games.filter((g) => ["Updated Mar 16", "New this week", "Recently updated", "Updated moments ago", "Just published"].includes(g.update));
     }
     if (selectedCategory === "Under $40k raised") {
-      return featuredGames.filter((g) => {
+      return games.filter((g) => {
         const raised = Number(g.amount.split(" of ")[0]?.replace("$", "").replace("k", "").replace(/,/g, ""));
         return Number.isFinite(raised) && raised < 40;
       });
     }
-    return featuredGames;
-  }, [selectedCategory]);
+    return games;
+  }, [games, selectedCategory]);
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
@@ -1025,6 +1162,8 @@ function FeatureBox({ title, body }) {
 function ProjectPreviewPage({ project, setCurrentPage }) {
   const activeProject = project || featuredGames[0];
   const playLink = getPlayLink(activeProject);
+  const roadmapPhases = getRoadmapPhases(activeProject);
+  const roadmap = getRoadmapSummary(activeProject);
 
   return (
     <main>
@@ -1131,16 +1270,52 @@ function ProjectPreviewPage({ project, setCurrentPage }) {
 
             <SurfaceCard dark className="p-6">
               <SectionHeader dark title="Milestones" body="These checklist items come directly from the project publishing flow." />
-              <div className="space-y-4">
-                {activeProject.milestones.map(([label, done]) => (
-                  <div key={label} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className={cn("flex h-8 w-8 items-center justify-center rounded-full", done ? "bg-cyan-300 text-slate-950" : "bg-white/10 text-zinc-400 ring-1 ring-white/10")}>
-                        <CheckCircle2 className="h-4 w-4" />
+              <div className="mb-5 grid gap-3 sm:grid-cols-3">
+                <StatCard label="Phases" value={`${roadmap.phaseCount}`} />
+                <StatCard label="Milestones" value={`${roadmap.completedCount}/${roadmap.milestoneCount}`} />
+                <StatCard label="Next target" value={roadmap.timeframe} />
+              </div>
+              <div className="space-y-5">
+                {roadmapPhases.map((phase) => (
+                  <div key={phase.id} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <div className="text-xl font-semibold text-white">{phase.name}</div>
+                        <p className="mt-2 text-sm leading-6 text-zinc-400">{phase.objective}</p>
                       </div>
-                      <span className="font-medium text-zinc-200">{label}</span>
+                      <div className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-sm text-cyan-100">
+                        {phase.timeframe}
+                      </div>
                     </div>
-                    <span className="text-sm text-zinc-500">{done ? "Complete" : "In progress"}</span>
+
+                    <div className="mt-5 space-y-3">
+                      {phase.milestones.map((milestone) => {
+                        const done = milestone.status === "Complete";
+
+                        return (
+                          <div key={milestone.id} className="rounded-2xl border border-white/10 bg-[#050816] px-4 py-4">
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                              <div className="flex items-start gap-3">
+                                <div className={cn("mt-0.5 flex h-8 w-8 items-center justify-center rounded-full", done ? "bg-cyan-300 text-slate-950" : "bg-white/10 text-zinc-400 ring-1 ring-white/10")}>
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </div>
+                                <div>
+                                  <div className="font-medium text-zinc-100">{milestone.title}</div>
+                                  <div className="mt-2 flex flex-wrap gap-2">
+                                    <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-zinc-300">{milestone.status}</span>
+                                    <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-zinc-300">{milestone.budgetCategory}</span>
+                                    {milestone.budgetAmount ? (
+                                      <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-zinc-300">${milestone.budgetAmount}</span>
+                                    ) : null}
+                                  </div>
+                                  <p className="mt-3 text-sm leading-6 text-zinc-400">{milestone.description}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1576,7 +1751,81 @@ function PreviewTabs({ activeTab, setActiveTab }) {
   );
 }
 
-function UploadProjectPage({ setCurrentPage, setSelectedProject, previewProject }) {
+function RoadmapPhaseEditor({ phase, index, onUpdatePhase, onAddMilestone, onUpdateMilestone }) {
+  return (
+    <div className="rounded-[28px] border border-cyan-300/25 bg-[#07101d]/80 p-5 shadow-[0_0_0_1px_rgba(56,189,248,0.12)]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <FieldShell label={`Phase ${index + 1} name`} helper="Appears in roadmap sections and project detail summaries." error={!phase.name.trim() ? "Phase name is required." : ""} dark>
+          <TextInput dark value={phase.name} onChange={(event) => onUpdatePhase("name", event.target.value)} placeholder="Vertical Slice Lock" />
+        </FieldShell>
+        <FieldShell label="Targeted timeframe" helper="Shown on cards and roadmap headers." error={!phase.timeframe.trim() ? "Add a target month or window." : ""} dark>
+          <TextInput dark value={phase.timeframe} onChange={(event) => onUpdatePhase("timeframe", event.target.value)} placeholder="Apr 2026" />
+        </FieldShell>
+      </div>
+
+      <FieldShell label="Phase objective" helper="Use one clear paragraph so players understand what this stage is for." dark>
+        <TextAreaInput dark className="min-h-[110px]" value={phase.objective} onChange={(event) => onUpdatePhase("objective", event.target.value)} placeholder="Explain the main purpose of this phase." />
+      </FieldShell>
+
+      <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-lg font-semibold text-white">Milestones inside this phase</div>
+            <p className="mt-1 text-sm text-zinc-400">Add checkpoints players can actually understand from a card or project page.</p>
+          </div>
+          <GhostButton dark onClick={onAddMilestone}>Add Milestone</GhostButton>
+        </div>
+
+        <div className="space-y-4">
+          {phase.milestones.map((milestone, milestoneIndex) => (
+            <div key={milestone.id} className="rounded-[24px] border border-white/10 bg-[#050816] p-4">
+              <div className="grid gap-4 lg:grid-cols-2">
+                <FieldShell label="Milestone title" helper="Short enough to work in compact cards." error={!milestone.title.trim() ? "Milestone title is required." : ""} dark>
+                  <TextInput dark value={milestone.title} onChange={(event) => onUpdateMilestone(milestoneIndex, "title", event.target.value)} placeholder="Demo combat tuning" />
+                </FieldShell>
+                <FieldShell label="Milestone status" helper="Signals whether this checkpoint is done or still moving." dark>
+                  <div className="flex flex-wrap gap-2">
+                    {["Queued", "In progress", "Complete"].map((option) => (
+                      <SelectableChip
+                        key={option}
+                        label={option}
+                        active={milestone.status === option}
+                        onClick={() => onUpdateMilestone(milestoneIndex, "status", option)}
+                        dark
+                      />
+                    ))}
+                  </div>
+                </FieldShell>
+                <FieldShell label="Budget category" helper="Useful for roadmap transparency on the detail page." dark>
+                  <div className="flex flex-wrap gap-2">
+                    {["Engineering", "Art", "UI / UX", "Audio", "Production", "Marketing"].map((option) => (
+                      <SelectableChip
+                        key={option}
+                        label={option}
+                        active={milestone.budgetCategory === option}
+                        onClick={() => onUpdateMilestone(milestoneIndex, "budgetCategory", option)}
+                        dark
+                      />
+                    ))}
+                  </div>
+                </FieldShell>
+                <FieldShell label="Budget amount (USD)" helper="Optional estimate that can support funding context." dark>
+                  <TextInput dark value={milestone.budgetAmount} onChange={(event) => onUpdateMilestone(milestoneIndex, "budgetAmount", event.target.value)} placeholder="2500" />
+                </FieldShell>
+              </div>
+
+              <FieldShell label="Milestone description" helper="This appears as supporting copy in the roadmap section." dark>
+                <TextAreaInput dark className="min-h-[96px]" value={milestone.description} onChange={(event) => onUpdateMilestone(milestoneIndex, "description", event.target.value)} placeholder="Explain what this checkpoint unlocks or improves." />
+              </FieldShell>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UploadProjectPage({ setCurrentPage, setSelectedProject, setCreatorProject }) {
   const [form, setForm] = useState(initialUploadState);
   const [previewTab, setPreviewTab] = useState("home-card");
   const [publishIntent, setPublishIntent] = useState("");
@@ -1584,6 +1833,10 @@ function UploadProjectPage({ setCurrentPage, setSelectedProject, previewProject 
   const previewData = useMemo(() => buildPreviewProject(form), [form]);
   const validation = useMemo(() => getUploadValidation(form), [form]);
   const canPublish = validation.length === 0;
+
+  useEffect(() => {
+    setCreatorProject(previewData);
+  }, [previewData, setCreatorProject]);
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -1600,6 +1853,74 @@ function UploadProjectPage({ setCurrentPage, setSelectedProject, previewProject 
     setForm((current) => ({
       ...current,
       keyFeatures: current.keyFeatures.map((item, currentIndex) => (currentIndex === index ? value : item)),
+    }));
+  }
+
+  function updateRoadmapPhase(phaseIndex, field, value) {
+    setForm((current) => ({
+      ...current,
+      roadmapPhases: current.roadmapPhases.map((phase, currentIndex) =>
+        currentIndex === phaseIndex ? { ...phase, [field]: value } : phase
+      ),
+    }));
+  }
+
+  function addRoadmapPhase() {
+    setForm((current) => ({
+      ...current,
+      roadmapPhases: [
+        ...current.roadmapPhases,
+        createRoadmapPhase(`Phase ${current.roadmapPhases.length + 1}`, "", "", [
+          {
+            id: `phase-${current.roadmapPhases.length + 1}-milestone-1`,
+            title: "",
+            status: "Queued",
+            budgetCategory: "Engineering",
+            budgetAmount: "",
+            description: "",
+          },
+        ]),
+      ],
+    }));
+  }
+
+  function addRoadmapMilestone(phaseIndex) {
+    setForm((current) => ({
+      ...current,
+      roadmapPhases: current.roadmapPhases.map((phase, currentIndex) =>
+        currentIndex === phaseIndex
+          ? {
+              ...phase,
+              milestones: [
+                ...phase.milestones,
+                {
+                  id: `${phase.id}-milestone-${phase.milestones.length + 1}`,
+                  title: "",
+                  status: "Queued",
+                  budgetCategory: "Engineering",
+                  budgetAmount: "",
+                  description: "",
+                },
+              ],
+            }
+          : phase
+      ),
+    }));
+  }
+
+  function updateRoadmapMilestone(phaseIndex, milestoneIndex, field, value) {
+    setForm((current) => ({
+      ...current,
+      roadmapPhases: current.roadmapPhases.map((phase, currentIndex) =>
+        currentIndex === phaseIndex
+          ? {
+              ...phase,
+              milestones: phase.milestones.map((milestone, currentMilestoneIndex) =>
+                currentMilestoneIndex === milestoneIndex ? { ...milestone, [field]: value } : milestone
+              ),
+            }
+          : phase
+      ),
     }));
   }
 
@@ -1774,7 +2095,26 @@ function UploadProjectPage({ setCurrentPage, setSelectedProject, previewProject 
             </div>
           </UploadSection>
 
-          <UploadSection eyebrow="D. Discoverability" title="Guide the right players to the page" body="These tags help shape recommendations, search behavior, and profile context.">
+          <UploadSection eyebrow="D. Roadmap" title="Show the plan, not just the pitch" body="This roadmap is pulled into homepage cards and the project page so players can see what is shipping next.">
+            <div className="space-y-5">
+              {form.roadmapPhases.map((phase, phaseIndex) => (
+                <RoadmapPhaseEditor
+                  key={phase.id}
+                  phase={phase}
+                  index={phaseIndex}
+                  onUpdatePhase={(field, value) => updateRoadmapPhase(phaseIndex, field, value)}
+                  onAddMilestone={() => addRoadmapMilestone(phaseIndex)}
+                  onUpdateMilestone={(milestoneIndex, field, value) => updateRoadmapMilestone(phaseIndex, milestoneIndex, field, value)}
+                />
+              ))}
+            </div>
+
+            <GhostButton dark className="w-full justify-center py-4 text-base" onClick={addRoadmapPhase}>
+              Add Phase
+            </GhostButton>
+          </UploadSection>
+
+          <UploadSection eyebrow="E. Discoverability" title="Guide the right players to the page" body="These tags help shape recommendations, search behavior, and profile context.">
             <FieldShell label="Search tags" helper="Use short, searchable keywords.">
               <div className="flex flex-wrap gap-2">
                 {["stealth", "narrative", "extraction", "systems", "co-op", "sci-fi"].map((option) => (
@@ -1820,7 +2160,7 @@ function UploadProjectPage({ setCurrentPage, setSelectedProject, previewProject 
             </SurfaceCard>
           </UploadSection>
 
-          <UploadSection eyebrow="E. Publish" title="Ship the page with confidence" body="Review key blockers before you save draft, preview, or publish.">
+          <UploadSection eyebrow="F. Publish" title="Ship the page with confidence" body="Review key blockers before you save draft, preview, or publish.">
             <div className="grid gap-3 md:grid-cols-2">
               {validation.length > 0 ? (
                 validation.map((item) => (
@@ -1879,6 +2219,8 @@ function UploadProjectPage({ setCurrentPage, setSelectedProject, previewProject 
 }
 
 function HomeCardPreview({ data }) {
+  const roadmap = getRoadmapSummary(data);
+
   return (
     <div>
       <div className="mb-3 text-sm font-semibold text-white">Home Card</div>
@@ -1897,6 +2239,13 @@ function HomeCardPreview({ data }) {
             <div className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-zinc-300">{data.status}</div>
           </div>
           <p className="mt-3 text-sm leading-6 text-zinc-400">{data.hook}</p>
+          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+            <div className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+              <span>Next roadmap</span>
+              <span>{roadmap.timeframe}</span>
+            </div>
+            <div className="mt-2 text-sm font-medium text-zinc-100">{roadmap.nextLabel}</div>
+          </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {data.tags.slice(0, 4).map((tag) => (
               <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-zinc-300">
@@ -1911,6 +2260,8 @@ function HomeCardPreview({ data }) {
 }
 
 function ProjectPageMiniPreview({ data }) {
+  const roadmap = getRoadmapSummary(data);
+
   return (
     <div className="space-y-4">
       <div className="text-sm font-semibold text-white">Project Page</div>
@@ -1939,10 +2290,15 @@ function ProjectPageMiniPreview({ data }) {
           </div>
           <div className="mt-5 grid grid-cols-3 gap-3">
             {data.gallery.slice(0, 3).map((item) => (
-              <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-3 py-6 text-center text-xs text-zinc-400">
+              <div key={item} className="aspect-video rounded-2xl border border-white/10 bg-white/5 px-3 py-6 text-center text-xs text-zinc-400">
                 {item}
               </div>
             ))}
+          </div>
+          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">Roadmap</div>
+            <div className="mt-2 text-sm font-medium text-zinc-100">{roadmap.nextLabel}</div>
+            <div className="mt-1 text-xs text-zinc-500">{roadmap.completedCount}/{roadmap.milestoneCount} milestones complete</div>
           </div>
         </div>
       </div>
@@ -1982,6 +2338,12 @@ function DeveloperProfilePreview({ data }) {
 }
 
 function buildPreviewProject(form) {
+  const roadmapPhases = form.roadmapPhases.map((phase) => ({
+    ...phase,
+    milestones: phase.milestones.map((milestone) => ({ ...milestone })),
+  }));
+  const roadmap = getRoadmapSummary({ roadmapPhases });
+
   return {
     id: "signal-run",
     title: form.title.trim() || "Untitled Project",
@@ -1994,15 +2356,9 @@ function buildPreviewProject(form) {
     status: form.visibility === "Coming soon" ? "Coming soon" : form.buildStatus,
     update: "Updated moments ago",
     description: form.fullDescription.trim() || form.shortDescription.trim() || "Add a short description to explain the project.",
-    trustTags: [...form.genres.slice(0, 2), ...form.platforms.slice(0, 2)],
-    milestones: [
-      ["Playable onboarding slice", true],
-      ["Public trailer refresh", true],
-      ["Systems tuning pass", false],
-      ["Steam page launch", false],
-      ["Closed feedback round", false],
-      ["Demo release prep", false],
-    ],
+    trustTags: ["Roadmap live", ...form.genres.slice(0, 2), ...form.platforms.slice(0, 1), roadmap.timeframe].filter(Boolean).slice(0, 4),
+    milestones: roadmapPhases.flatMap((phase) => phase.milestones.map((milestone) => [milestone.title || "Untitled milestone", milestone.status === "Complete"])),
+    roadmapPhases,
     funds: [
       ["Engineering", "32%"],
       ["Art", "24%"],
@@ -2025,6 +2381,7 @@ function buildPreviewProject(form) {
     genreLine: form.genres.join(" / ") || "Genre pending",
     tags: [...form.genres, ...form.platforms, ...form.moodTags],
     gallery: form.galleryAssets.length > 0 ? form.galleryAssets : ["Gallery asset", "Second still", "Combat frame"],
+    roadmapSummary: roadmap.nextLabel,
   };
 }
 
@@ -2035,13 +2392,23 @@ function getUploadValidation(form) {
   if (form.hook.trim().length > 90) issues.push("Hook is too long: keep it under 90 characters.");
   if (form.genres.length === 0) issues.push("No genre selected: choose at least one genre tag.");
   if (!form.gameLink.trim()) issues.push("Missing game link: add a playable build or store/demo URL for the Play Now button.");
+  if (form.roadmapPhases.length === 0) issues.push("Missing roadmap: add at least one roadmap phase.");
+  if (form.roadmapPhases.some((phase) => !phase.name.trim() || !phase.timeframe.trim())) issues.push("Roadmap phase is incomplete: every phase needs a name and timeframe.");
+  if (form.roadmapPhases.some((phase) => phase.milestones.length === 0 || phase.milestones.some((milestone) => !milestone.title.trim()))) {
+    issues.push("Roadmap milestone missing: each phase needs at least one titled milestone.");
+  }
   return issues;
 }
 
 export default function PlayFirstSitePagesPrototype() {
   const [currentPage, setCurrentPageState] = useState(() => pageForPath(window.location.pathname));
-  const [selectedProject, setSelectedProject] = useState(featuredGames[0]);
+  const [creatorProject, setCreatorProject] = useState(() => buildPreviewProject(initialUploadState));
+  const [selectedProject, setSelectedProject] = useState(() => buildPreviewProject(initialUploadState));
   const [selectedCategory, setSelectedCategory] = useState("Trending");
+  const allProjects = useMemo(
+    () => [creatorProject, ...featuredGames.filter((game) => game.id !== creatorProject.id)],
+    [creatorProject]
+  );
 
   useEffect(() => {
     function handlePopState() {
@@ -2073,9 +2440,9 @@ export default function PlayFirstSitePagesPrototype() {
   let page = null;
 
   if (currentPage === "home") {
-    page = <HomePage setCurrentPage={setCurrentPage} setSelectedCategory={setSelectedCategory} openProjectPreview={openProjectPreview} />;
+    page = <HomePage games={allProjects} setCurrentPage={setCurrentPage} setSelectedCategory={setSelectedCategory} openProjectPreview={openProjectPreview} />;
   } else if (currentPage === "explore") {
-    page = <ExplorePage selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} openProjectPreview={openProjectPreview} />;
+    page = <ExplorePage games={allProjects} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} openProjectPreview={openProjectPreview} />;
   } else if (currentPage === "project-preview") {
     page = <ProjectPreviewPage project={selectedProject} setCurrentPage={setCurrentPage} />;
   } else if (currentPage === "how-it-works") {
@@ -2085,7 +2452,7 @@ export default function PlayFirstSitePagesPrototype() {
   } else if (currentPage === "signup") {
     page = <SignUpPage setCurrentPage={setCurrentPage} />;
   } else {
-    page = <UploadProjectPage setCurrentPage={setCurrentPage} setSelectedProject={setSelectedProject} previewProject={selectedProject} />;
+    page = <UploadProjectPage setCurrentPage={setCurrentPage} setSelectedProject={setSelectedProject} setCreatorProject={setCreatorProject} />;
   }
 
   return (
