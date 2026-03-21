@@ -1751,9 +1751,27 @@ function PreviewTabs({ activeTab, setActiveTab }) {
   );
 }
 
-function RoadmapPhaseEditor({ phase, index, onUpdatePhase, onAddMilestone, onUpdateMilestone }) {
+function RoadmapPhaseEditor({
+  phase,
+  index,
+  canDeletePhase,
+  onDeletePhase,
+  onUpdatePhase,
+  onAddMilestone,
+  onDeleteMilestone,
+  onUpdateMilestone,
+}) {
   return (
     <div className="rounded-[28px] border border-cyan-300/25 bg-[#07101d]/80 p-5 shadow-[0_0_0_1px_rgba(56,189,248,0.12)]">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="text-sm uppercase tracking-[0.18em] text-cyan-200/70">Phase {index + 1}</div>
+        {canDeletePhase ? (
+          <button type="button" onClick={onDeletePhase} className="text-sm text-rose-200 transition hover:text-rose-100">
+            Delete phase
+          </button>
+        ) : null}
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
         <FieldShell label={`Phase ${index + 1} name`} helper="Appears in roadmap sections and project detail summaries." error={!phase.name.trim() ? "Phase name is required." : ""} dark>
           <TextInput dark value={phase.name} onChange={(event) => onUpdatePhase("name", event.target.value)} placeholder="Vertical Slice Lock" />
@@ -1779,6 +1797,19 @@ function RoadmapPhaseEditor({ phase, index, onUpdatePhase, onAddMilestone, onUpd
         <div className="space-y-4">
           {phase.milestones.map((milestone, milestoneIndex) => (
             <div key={milestone.id} className="rounded-[24px] border border-white/10 bg-[#050816] p-4">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="text-sm font-medium text-zinc-300">Milestone {milestoneIndex + 1}</div>
+                {phase.milestones.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => onDeleteMilestone(milestoneIndex)}
+                    className="text-sm text-rose-200 transition hover:text-rose-100"
+                  >
+                    Delete milestone
+                  </button>
+                ) : null}
+              </div>
+
               <div className="grid gap-4 lg:grid-cols-2">
                 <FieldShell label="Milestone title" helper="Short enough to work in compact cards." error={!milestone.title.trim() ? "Milestone title is required." : ""} dark>
                   <TextInput dark value={milestone.title} onChange={(event) => onUpdateMilestone(milestoneIndex, "title", event.target.value)} placeholder="Demo combat tuning" />
@@ -1902,6 +1933,27 @@ function UploadProjectPage({ setCurrentPage, setSelectedProject, setCreatorProje
                   description: "",
                 },
               ],
+            }
+          : phase
+      ),
+    }));
+  }
+
+  function deleteRoadmapPhase(phaseIndex) {
+    setForm((current) => ({
+      ...current,
+      roadmapPhases: current.roadmapPhases.filter((_, currentIndex) => currentIndex !== phaseIndex),
+    }));
+  }
+
+  function deleteRoadmapMilestone(phaseIndex, milestoneIndex) {
+    setForm((current) => ({
+      ...current,
+      roadmapPhases: current.roadmapPhases.map((phase, currentIndex) =>
+        currentIndex === phaseIndex
+          ? {
+              ...phase,
+              milestones: phase.milestones.filter((_, currentMilestoneIndex) => currentMilestoneIndex !== milestoneIndex),
             }
           : phase
       ),
@@ -2102,8 +2154,11 @@ function UploadProjectPage({ setCurrentPage, setSelectedProject, setCreatorProje
                   key={phase.id}
                   phase={phase}
                   index={phaseIndex}
+                  canDeletePhase={form.roadmapPhases.length > 1}
+                  onDeletePhase={() => deleteRoadmapPhase(phaseIndex)}
                   onUpdatePhase={(field, value) => updateRoadmapPhase(phaseIndex, field, value)}
                   onAddMilestone={() => addRoadmapMilestone(phaseIndex)}
+                  onDeleteMilestone={(milestoneIndex) => deleteRoadmapMilestone(phaseIndex, milestoneIndex)}
                   onUpdateMilestone={(milestoneIndex, field, value) => updateRoadmapMilestone(phaseIndex, milestoneIndex, field, value)}
                 />
               ))}
